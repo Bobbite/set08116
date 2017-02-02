@@ -15,25 +15,25 @@ bool load_content() {
   // Create cube data - twelve triangles triangles
   // Positions
   vector<vec3> positions{
-      // *********************************
-      // Add the position data for triangles here, (6 verts per side)
-      // Front
-
-
-      // Back
-
-
-      // Right
-
-
-      // Left
-
-
-      // Top
-
-
-      // Bottom
-
+	        // Add the position data for triangles here, (6 verts per side)
+	        // Front
+	  vec3(1.0f, 1.0f, 1.0f) , vec3(-1.0f, 1.0f, 1.0f) , vec3(-1.0f, -1.0f, 1.0f),
+	  vec3(1.0f, 1.0f, 1.0f) ,vec3(-1.0f, -1.0f, 1.0f),  vec3(1.0f, -1.0f, 1.0f),
+	        // Back
+	  vec3(-1.0f, -1.0f, -1.0f) , vec3(-1.0f, 1.0f, -1.0f) , vec3(1.0f, 1.0f, -1.0f),
+	  vec3(1.0f, -1.0f, -1.0f) ,vec3(-1.0f, -1.0f, -1.0f),  vec3(1.0f, 1.0f, -1.0f),
+	        // Right
+	  vec3(1.0f, 1.0f, 1.0f) , vec3(1.0f, -1.0f, 1.0f) , vec3(1.0f, 1.0f, -1.0f),
+	  vec3(1.0f, 1.0f, -1.0f) ,vec3(1.0f, -1.0f, 1.0f),  vec3(1.0f, -1.0f, -1.0f),
+	        // Left
+	  vec3(-1.0f, 1.0f, -1.0f) , vec3(-1.0f, -1.0f, 1.0f) , vec3(-1.0f, 1.0f, 1.0f),
+	  vec3(-1.0f, -1.0f, -1.0f) ,vec3(-1.0f, -1.0f, 1.0f),  vec3(-1.0f, 1.0f, -1.0f),
+	        // Top
+	  vec3(-1.0f, 1.0f, 1.0f), vec3(1.0f, 1.0f, 1.0f), vec3(-1.0f, 1.0f, -1.0f),
+	  vec3(-1.0f, 1.0f, -1.0f), vec3(1.0f, 1.0f, 1.0f), vec3(1.0f, 1.0f, -1.0f),
+	        // Bottom
+	  vec3(-1.0f, -1.0f, -1.0f), vec3(1.0f, -1.0f, 1.0f), vec3(-1.0f, -1.0f, 1.0f),
+	  vec3(1.0f, -1.0f, -1.0f), vec3(1.0f, -1.0f, 1.0f), vec3(-1.0f, -1.0f, -1.0f)
 
       // *********************************
   };

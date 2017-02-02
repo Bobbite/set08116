@@ -8,6 +8,7 @@ using namespace glm;
 mesh m;
 effect eff;
 target_camera cam;
+#define NapierRed 0.765f, 0.082f, 0.196f
 
 bool load_content() {
   // Construct geometry object
@@ -15,28 +16,26 @@ bool load_content() {
   // Create triangle data
   // Positions
   vector<vec3> positions{vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, -1.0f, 0.0f), vec3(1.0f, -1.0f, 0.0f)};
-  // Colours
-  vector<vec4> colours{vec4(1.0f, 0.0f, 0.0f, 1.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f)};
   // Add to the geometry
   geom.add_buffer(positions, BUFFER_INDEXES::POSITION_BUFFER);
-  geom.add_buffer(colours, BUFFER_INDEXES::COLOUR_BUFFER);
 
+  // Create mesh object
+  m = mesh(geom);
+
+  // Load in colour shaders
+  eff.add_shader("29_Shaders/colour.vert", GL_VERTEX_SHADER);
+  eff.add_shader("29_Shaders/colour.frag", GL_FRAGMENT_SHADER);
   // *********************************
-  // Create mesh object here
-
-  // *********************************
-
-  // Load in shaders
-  eff.add_shader("shaders/basic.vert", GL_VERTEX_SHADER);
-  eff.add_shader("shaders/basic.frag", GL_FRAGMENT_SHADER);
   // Build effect
   eff.build();
+  // *********************************
 
   // Set camera properties
   cam.set_position(vec3(10.0f, 10.0f, 10.0f));
   cam.set_target(vec3(0.0f, 0.0f, 0.0f));
   auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
   cam.set_projection(quarter_pi<float>(), aspect, 2.414f, 1000.0f);
+
   return true;
 }
 
@@ -50,22 +49,31 @@ bool render() {
   // Bind effect
   renderer::bind(eff);
   // Create MVP matrix
-  mat4 M(1.0f);
+  auto M = m.get_transform().get_transform_matrix();
   auto V = cam.get_view();
   auto P = cam.get_projection();
   auto MVP = P * V * M;
   // Set MVP matrix uniform
-  glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
+  glUniformMatrix4fv(eff.get_uniform_location("MVP"), // Location of uniform
+                     1,                               // Number of values - 1 mat4
+                     GL_FALSE,                        // Transpose the matrix?
+                     value_ptr(MVP));                 // Pointer to matrix data
   // *********************************
-  // Render the mesh here
+  // Set the colour value for the shader here (Hint: rep the Brand, use the NapierRed macro)
+  glUniform4fv(eff.get_uniform_location("colour"), 1, value_ptr(vec4(0.0f, 0.0f, 1.0f, 1.0f)));
+  glUniform4fv(eff.get_uniform_location("colour2"), 1, value_ptr(vec4(1.0f, 0.0f, 0.0f, 1.0f)));
 
   // *********************************
+
+  // Render the mesh
+  renderer::render(m);
+
   return true;
 }
 
 void main() {
   // Create application
-  app application("24_Meshes");
+  app application;
   // Set load content, update and render methods
   application.set_load_content(load_content);
   application.set_update(update);

@@ -18,31 +18,32 @@ bool load_content() {
   // Positions
   vector<vec3> positions{
       // *********************************
-      // Add the position data for triangles here, (6 verts per side)
-      // Front
+	   // Add the position data for triangles here, (6 verts per side)
+		 // Front
+	  vec3(1.0f, 1.0f, 1.0f) , vec3(-1.0f, 1.0f, 1.0f) , vec3(-1.0f, -1.0f, 1.0f),
+	  vec3(1.0f, 1.0f, 1.0f) ,vec3(-1.0f, -1.0f, 1.0f),  vec3(1.0f, -1.0f, 1.0f),
+	  // Back
+	  vec3(-1.0f, -1.0f, -1.0f) , vec3(-1.0f, 1.0f, -1.0f) , vec3(1.0f, 1.0f, -1.0f),
+	  vec3(1.0f, -1.0f, -1.0f) ,vec3(-1.0f, -1.0f, -1.0f),  vec3(1.0f, 1.0f, -1.0f),
+	  // Right
+	  vec3(1.0f, 1.0f, 1.0f) , vec3(1.0f, -1.0f, 1.0f) , vec3(1.0f, 1.0f, -1.0f),
+	  vec3(1.0f, 1.0f, -1.0f) ,vec3(1.0f, -1.0f, 1.0f),  vec3(1.0f, -1.0f, -1.0f),
+	  // Left
+	  vec3(-1.0f, 1.0f, -1.0f) , vec3(-1.0f, -1.0f, 1.0f) , vec3(-1.0f, 1.0f, 1.0f),
+	  vec3(-1.0f, -1.0f, -1.0f) ,vec3(-1.0f, -1.0f, 1.0f),  vec3(-1.0f, 1.0f, -1.0f),
+	  // Top
+	  vec3(-1.0f, 1.0f, 1.0f), vec3(1.0f, 1.0f, 1.0f), vec3(-1.0f, 1.0f, -1.0f),
+	  vec3(-1.0f, 1.0f, -1.0f), vec3(1.0f, 1.0f, 1.0f), vec3(1.0f, 1.0f, -1.0f),
+	  // Bottom
+	  vec3(-1.0f, -1.0f, -1.0f), vec3(1.0f, -1.0f, 1.0f), vec3(-1.0f, -1.0f, 1.0f),
+	  vec3(1.0f, -1.0f, -1.0f), vec3(1.0f, -1.0f, 1.0f), vec3(-1.0f, -1.0f, -1.0f)
 
-
-      // Back
-
-
-      // Right
-
-
-      // Left
-
-
-      // Top
-
-
-      // Bottom
-
-
-      // *********************************
+	  // *********************************
   };
   // Colours
   vector<vec4> colours;
   for (auto i = 0; i < positions.size(); ++i) {
-    colours.push_back(vec4(i % 2, 0.6, 0.0f, 1.0f)); // Notice how I got those Rad colours?
+    colours.push_back(vec4(i % 2, 0.4, i % 2, 1.0f)); // Notice how I got those Rad colours?
   }
   // Add to the geometry
   geom.add_buffer(positions, BUFFER_INDEXES::POSITION_BUFFER);
@@ -66,37 +67,56 @@ bool update(float delta_time) {
   // *********************************
   // Use keys to update transform values
   // WSAD - movement
-  // Arrow Keys - rotation
+  // Cursor - rotation
   // O decrease scale, P increase scale
 
+	if ((glfwGetKey(renderer::get_window(), GLFW_KEY_S)))
+	{
+		pos += vec3(0.0f, 0.0f, -5.0f) * delta_time;
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_W))
+	{
+		pos += vec3(0.0f, 0.0f, 5.0f) * delta_time;
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_A))
+	{
+		pos += vec3(-5.0f, 0.0f, 0.0f) * delta_time;
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_D))
+	{
+		pos += vec3(5.0f, 0.0f, 0.0f) * delta_time;
+	}
+	//Rotate - Cursor Keys
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_UP)) 
+	{
+		theta -= pi<float>() * delta_time;		
+	}
 
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_DOWN)) 
+	{
+		theta += pi<float>() * delta_time;		
+	}
 
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_LEFT)) 
+	{
+		rho -= pi<float>() * delta_time;		
+	}
 
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_RIGHT))
+	{
+		rho += pi<float>() * delta_time;		
+	}
+	
+	//Scale, P and O keys
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_P))
+	{
+	s = s * 1.1;		
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_O))
+	{
+	s = s / 1.1;	
+	}
 
   // *********************************
   // Update the camera
@@ -107,12 +127,14 @@ bool update(float delta_time) {
 bool render() {
   // Bind effect
   renderer::bind(eff);
-  mat4 T, R, S, M;
+  mat4 T, R, S, M, Rx;
   // *********************************
   // Create transformation matrix
-
-
-
+  T = translate(mat4(1.0f), pos);
+  R = rotate(mat4(1.0f), theta, vec3(0.0f, 0.0f, 1.0f));
+  Rx = rotate(mat4(1.0f), rho, vec3(1.0f, 0.0f, 0.0f));
+  S = scale(mat4(1.0f), vec3(s));
+  M = T*(R*Rx*S);
 
   // *********************************
   // Create MVP matrix

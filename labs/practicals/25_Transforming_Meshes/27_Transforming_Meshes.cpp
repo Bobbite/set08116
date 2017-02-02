@@ -23,7 +23,7 @@ bool load_content() {
 
   // *********************************
   // Create mesh object here
-
+	 m = mesh(geom);
   // *********************************
 
   // Load in shaders
@@ -50,34 +50,44 @@ bool update(float delta_time) {
     m.get_transform().position -= vec3(0.0f, 0.0f, 5.0f) * delta_time;
   }
   // *********************************
-
-
-
-
-
-
-
-
+  if (glfwGetKey(renderer::get_window(), 'S'))
+  {
+	  m.get_transform().position += vec3(0.0f, 0.0f, 5.0f) * delta_time;
+  }
+  if (glfwGetKey(renderer::get_window(), 'A'))
+  {
+	  m.get_transform().position -= vec3(5.0f, 0.0f, 0.0f) * delta_time;
+  }
+  if (glfwGetKey(renderer::get_window(), 'D'))
+  {
+	  m.get_transform().position += vec3(5.0f, 0.0f, 0.0f) * delta_time;
+  }
+  
 
   // *********************************
   if (glfwGetKey(renderer::get_window(), GLFW_KEY_UP)) {
     m.get_transform().rotate(vec3(-pi<float>() * delta_time, 0.0f, 0.0f));
   }
   // *********************************
+  if (glfwGetKey(renderer::get_window(), GLFW_KEY_DOWN)) {
+	  m.get_transform().rotate(vec3(+pi<float>() * delta_time, 0.0f, 0.0f));
+  }
+  if (glfwGetKey(renderer::get_window(), GLFW_KEY_LEFT)) {
+	  m.get_transform().rotate(vec3(0.0f, 0.0f, -pi<float>() * delta_time));
+  }
+  if (glfwGetKey(renderer::get_window(), GLFW_KEY_RIGHT)) {
+	  m.get_transform().rotate(vec3(0.0f, 0.0f, +pi<float>() * delta_time));
+  }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+  if (glfwGetKey(renderer::get_window(), 'O'))
+  {
+	  m.get_transform().scale += (-1.0f * delta_time);
+  }
+  if (glfwGetKey(renderer::get_window(), 'P'))
+  {
+	  m.get_transform().scale += (+1.0f * delta_time);
+  }
 
   // *********************************
   // Update the camera
@@ -91,24 +101,24 @@ bool render() {
   mat4 M;
   // *********************************
   // Get the model transform from the mesh
-
+  M = m.get_transform().get_transform_matrix();
   // *********************************
   // Create MVP matrix
   auto V = cam.get_view();
   auto P = cam.get_projection();
-  auto MVP = P * V * M;
+  auto MVP = P * (V * M);
   // Set MVP matrix uniform
   glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
   // *********************************
   // Render the mesh here
-
+  renderer::render(m);
   // *********************************
   return true;
 }
 
 void main() {
   // Create application
-  app application("25_Transforming_Meshes");
+  app application("27_Transforming_Meshes");
   // Set load content, update and render methods
   application.set_load_content(load_content);
   application.set_update(update);

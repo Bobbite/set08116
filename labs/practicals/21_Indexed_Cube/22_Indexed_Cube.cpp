@@ -11,48 +11,49 @@ target_camera cam;
 float theta = 0.0f;
 float rho = 0.0f;
 
-const int subdivisions = 5;
-
-void divide_triangle(const vector<vec3> &points, int divisions, vector<vec3> &positions, vector<vec4> &colours) {
-  // IF we have more divisions to do?
-  if (divisions > 0) {
-    // *********************************
-    // Calculate new vertices to work on (Normalize each element!)
-
-
-    // Divide new triangles
-
-
-
-
-    // *********************************
-  } else {
-    positions.insert(positions.end(), points.begin(), points.end());
-    for (auto i = 0; i < 3; ++i) {
-      colours.push_back(vec4(0.6f, i % 2, i % 3, 1.0f));
-    }
-  }
-}
-
 bool load_content() {
-  // Required buffers
-  vector<vec3> positions;
+  // Create cube data - eight corners
+  // Positions
+  vector<vec3> positions{
+      // *********************************
+      // Add the position data for cube corners here (8 total)
+	  vec3(1.0f,1.0f,1.0f), vec3(-1.0f,1.0f,1.0f),
+	  vec3(-1.0f,-1.0f,1.0f), vec3(1.0f,-1.0f,1.0f),
+	  vec3(1.0f,1.0f,-1.0f), vec3(-1.0f,1.0f,-1.0f),
+	  vec3(-1.0f,-1.0f,-1.0f), vec3(1.0f,-1.0f,-1.0f),
+
+      // *********************************
+  };
+  // Colours
   vector<vec4> colours;
-  // Define the initial tetrahedron - 4 points
-  vector<vec3> v{vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.942809f, -0.333333f), vec3(-0.816497f, -0.471405f, -0.333333f),
-                 vec3(0.816497f, -0.471405f, 0.333333f)};
-  // Divide the triangles
-  divide_triangle({v[0], v[1], v[2]}, subdivisions, positions, colours);
-  divide_triangle({v[3], v[2], v[1]}, subdivisions, positions, colours);
-  divide_triangle({v[0], v[3], v[1]}, subdivisions, positions, colours);
-  divide_triangle({v[0], v[2], v[3]}, subdivisions, positions, colours);
-
-  // Use Line mode to see what this looks like in wireframe, Hint: It's Wack.
-  // geom.set_type(GL_LINES);
-
+  for (auto i = 0; i < positions.size(); ++i) {
+    colours.push_back(vec4((i + 1) % 2, 0.0f, i % 2, 1.0f));
+  }
+  // Create the index buffer
+  vector<GLuint> indices{
+      // *********************************
+      // Add index information here - 3 per triangle, 6 per face, 12 triangles
+      // Front
+	  0,1,2, 3,0,2,
+      // Back
+	  6,5,4, 7,6,4,
+      // Right
+	  0,3,7, 7,4,0,
+      // Left
+	  5,6,2, 2,1,5,
+      // Top
+	  5,1,0, 5,0,4,
+      // Bottom
+	  6,3,2, 6,7,3
+      // *********************************
+  };
   // Add to the geometry
   geom.add_buffer(positions, BUFFER_INDEXES::POSITION_BUFFER);
   geom.add_buffer(colours, BUFFER_INDEXES::COLOUR_BUFFER);
+  // ****************************
+  // Add index buffer to geometry
+  // ****************************
+  geom.add_index_buffer(indices);
 
   // Load in shaders
   eff.add_shader("shaders/basic.vert", GL_VERTEX_SHADER);
@@ -61,7 +62,7 @@ bool load_content() {
   eff.build();
 
   // Set camera properties
-  cam.set_position(vec3(3.0f, 3.0f, 3.0f));
+  cam.set_position(vec3(10.0f, 10.0f, 10.0f));
   cam.set_target(vec3(0.0f, 0.0f, 0.0f));
   auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
   cam.set_projection(quarter_pi<float>(), aspect, 2.414f, 1000.0f);
@@ -103,7 +104,7 @@ bool render() {
 
 void main() {
   // Create application
-  app application("23_Sphere_Subdivision");
+  app application("22_Indexed_Cube");
   // Set load content, update and render methods
   application.set_load_content(load_content);
   application.set_update(update);

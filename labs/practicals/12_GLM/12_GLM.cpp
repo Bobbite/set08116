@@ -9,4 +9,21 @@
 using namespace std;
 using namespace glm;
 
-int main() {}
+int main() {
+
+	mat4 m(1.0f);
+	mat4 t(1.0f);
+	mat4 l(1.0f);
+
+	mat4 p = t + l;
+
+	mat4 u = 5.0f * t * l;
+
+	mat3 m3(1.0f);
+
+
+	
+	vec3 poop(1, 0, 0);
+	quat q = rotate(quat(), 45, poop);
+
+}
