@@ -16,10 +16,10 @@ bool load_content() {
   geometry geom;
   // Create triangle data
   // Positions
-  vector<vec3> positions{vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, -1.0f, 0.0f), vec3(1.0f, -1.0f, 0.0f)};
+  vector<vec3> positions{vec3(1.0f, -1.0f, 0.0f), vec3(1.0f, 1.0f, 0.0f), vec3(-1.0f, 1.0f, 0.0f), vec3(-1.0f, -1.0f, 0.0f)};
   // *********************************
   // Define texture coordinates for triangle
-  vector<vec2> tex_coords{ vec2(0.5f, 0.0f), vec2(0.0f, 1.0f), vec2(1.0f, 1.0f) };
+  vector<vec2> tex_coords{ vec2(0.0f, 0.0f), vec2(0.0f, 1.0f), vec2(1.0f, 1.0f), vec2(1.0f, 0.0f)};
   // *********************************
   // Add to the geometry
   geom.add_buffer(positions, BUFFER_INDEXES::POSITION_BUFFER);
