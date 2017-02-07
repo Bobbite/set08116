@@ -51,14 +51,14 @@ bool load_content() {
   m = mesh(geom);
 
   // Load in simple cell shader
-  eff.add_shader("37_Simple_Cell_Shading/simple_cell.vert", GL_VERTEX_SHADER);
-  eff.add_shader("37_Simple_Cell_Shading/simple_cell.frag", GL_FRAGMENT_SHADER);
+  eff.add_shader("34_Simple_Cell_Shading/simple_cell.vert", GL_VERTEX_SHADER);
+  eff.add_shader("34_Simple_Cell_Shading/simple_cell.frag", GL_FRAGMENT_SHADER);
 
   // Build effect
   eff.build();
-
+   
   // Colour scale from red to black
-  vector<vec4> colour_data{vec4(0.12f, 0.0f, 0.0f, 1.0f), vec4(0.25f, 0.0f, 0.0f, 1.0f), vec4(0.5f, 0.0f, 0.0f, 1.0f),
+  vector<vec4> colour_data{vec4(0.06f, 0.0f, 0.0f, 1.0f), vec4(0.25f, 0.0f, 0.0f, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f),
                            vec4(1.0f, 0.0f, 0.0f, 1.0f)};
   // Create 1D 4x1 texture from colour_data
   tex = texture(colour_data, 4, 1, false, false);
@@ -94,9 +94,9 @@ bool render() {
 
   // *********************************
   // Bind texture to renderer
-
+  renderer::bind(tex, 0);
   // Set the texture value for the shader here
-
+  glUniform1i(eff.get_uniform_location("tex"), 0);
   // *********************************
 
   // Render the mesh
