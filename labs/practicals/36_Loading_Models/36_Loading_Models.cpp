@@ -13,22 +13,25 @@ target_camera cam;
 bool load_content() {
   // *********************************
   // Load in model, models/teapot.obj
-
+	m = mesh(geometry("models/Skull.3ds"));
+	m.get_transform().scale += vec3(3, 3, 3);
   // Load in texture, textures/checker.png
-
+	tex = texture("textures/checker.png"); 
   // *********************************
-
+	 
   // Load in shaders
-  eff.add_shader("31_Texturing_Shader/simple_texture.vert", GL_VERTEX_SHADER);
-  eff.add_shader("31_Texturing_Shader/simple_texture.frag", GL_FRAGMENT_SHADER);
+  eff.add_shader("27_Texturing_Shader/simple_texture.vert", GL_VERTEX_SHADER);
+  eff.add_shader("27_Texturing_Shader/simple_texture.frag", GL_FRAGMENT_SHADER);
   // Build effect
   eff.build();
 
   // Set camera properties
-  cam.set_position(vec3(200.0f, 200.0f, 200.0f));
-  cam.set_target(vec3(0.0f, 0.0f, 0.0f));
+  cam.set_position(vec3(0.0f, -100.0f, -300.0f));
+  cam.set_target(m.get_transform().position);
 
-  cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+  auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
+
+  cam.set_projection(quarter_pi<float>(), aspect, 0.1f, 1000.0f);
   return true;
 }
 
@@ -51,9 +54,9 @@ bool render() {
 
   // *********************************
   // Bind texture to renderer
-
+  renderer::bind(tex, 0);
   // Set the texture value for the shader here
-
+  glUniform1i(eff.get_uniform_location("tex"), 0);
   // *********************************
 
   // Render mesh
