@@ -15,8 +15,9 @@ double cursor_y = 0.0;
 bool initialise() {
   // *********************************
   // Set input mode - hide the cursor
-
-  // Capture initial mouse position
+	glfwSetInputMode(renderer::get_window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// Capture initial mouse position
+	glfwGetCursorPos(renderer::get_window(), &cursor_x, &cursor_y);
 
   // *********************************
 
@@ -61,8 +62,8 @@ bool load_content() {
   tex = texture("textures/checker.png");
 
   // Load in shaders
-  eff.add_shader("31_Texturing_Shader/simple_texture.vert", GL_VERTEX_SHADER);
-  eff.add_shader("31_Texturing_Shader/simple_texture.frag", GL_FRAGMENT_SHADER);
+  eff.add_shader("27_Texturing_Shader/simple_texture.vert", GL_VERTEX_SHADER);
+  eff.add_shader("27_Texturing_Shader/simple_texture.frag", GL_FRAGMENT_SHADER);
   // Build effect
   eff.build();
 
@@ -70,7 +71,9 @@ bool load_content() {
   cam.set_pos_offset(vec3(0.0f, 2.0f, 10.0f));
   cam.set_springiness(0.5f);
   cam.move(meshes["chaser"].get_transform().position, eulerAngles(meshes["chaser"].get_transform().orientation));
-  cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+
+  auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
+  cam.set_projection(quarter_pi<float>(), aspect, 0.1f, 1000.0f);
   return true;
 }
 
@@ -89,47 +92,47 @@ bool update(float delta_time) {
   double current_y;
   // *********************************
   // Get the current cursor position
-
+  glfwGetCursorPos(renderer::get_window(), &current_x, &current_y);
   // Calculate delta of cursor positions from last frame
-
-
+  float delta_x = current_x - cursor_x;
+  float delta_y = current_y - cursor_y;
   // Multiply deltas by ratios and delta_time - gets actual change in orientation
-
+  delta_x *= ratio_width;
+  delta_y *= ratio_height;
 
   // Rotate cameras by delta
   // x - delta_y
   // y - delta_x
   // z - 0
-
+  cam.rotate(vec3(delta_y, delta_x, 0));
   // Use keyboard to rotate target_mesh - QE rotate on y-axis
-
-
-
-
+  if (glfwGetKey(renderer::get_window(), 'Q')) {
+	  meshes["chaser"].get_transform().rotate(vec3(0, pi<float>() / 180, 0));
+  }
+  if (glfwGetKey(renderer::get_window(), 'E')) {
+	  meshes["chaser"].get_transform().rotate(vec3(0, -pi<float>() / 180, 0));
+  }
   // Use keyboard to move the target_mesh - WSAD
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  if (glfwGetKey(renderer::get_window(), 'W')) {
+	  auto v = rotate(meshes["chaser"].get_transform().orientation, vec3(0.0f, 0.0f, -5.0f) * delta_time);
+	  meshes["chaser"].get_transform().translate(v);
+  }
+  if (glfwGetKey(renderer::get_window(), 'S')) {
+	  meshes["chaser"].get_transform().translate(vec3(0.0f, 0.0f, 5.0f) * delta_time);
+  }
+  if (glfwGetKey(renderer::get_window(), 'A')) {
+	  meshes["chaser"].get_transform().translate(vec3(5.0f, 0.0f, 0.0f) * delta_time);
+  }
+  if (glfwGetKey(renderer::get_window(), 'D')) {
+	  meshes["chaser"].get_transform().translate(vec3(-5.0f, 0.0f, 0.0f) * delta_time);
+  }
   // Move camera - update target position and rotation
-
+  cam.move(meshes["chaser"].get_transform().position, eulerAngles(meshes["chaser"].get_transform().orientation));
   // Update the camera
-
+  cam.update(delta_time);
   // Update cursor pos
-
-
+  cursor_x = current_x;
+  cursor_y = current_y;
   // *********************************
   return true;
 }

@@ -45,11 +45,13 @@ bool load_content() {
   eff.add_shader("43_Diffuse_Light_1/simple_diffuse.frag", GL_FRAGMENT_SHADER);
   // Build effect
   eff.build();
-
+    
   // Set camera properties
   cam.set_position(vec3(50.0f, 10.0f, 50.0f));
   cam.set_target(vec3(0.0f, 0.0f, 0.0f));
-  cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+
+  auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
+  cam.set_projection(quarter_pi<float>(), aspect, 0.1f, 1000.0f);
   return true;
 }
 
@@ -91,13 +93,13 @@ bool render() {
 
     // *********************************
     // Set material colour- all objects red
-
+	glUniform4fv(eff.get_uniform_location("material_colour"), 1, value_ptr(vec4(1.0f, 0.0f, 0.0f, 1.0f)));
     // Set light colour- (1.0, 1.0, 1.0, 1.0)
-
-    // Set light direction - (1.0, 1.0, -1.0)
-
+	glUniform4fv(eff.get_uniform_location("light_colour"), 1, value_ptr(vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+	// Set light direction - (1.0, 1.0, -1.0)
+	glUniform3fv(eff.get_uniform_location("light_dir"), 1, value_ptr(vec3(1.0f, 1.0f, -1.0f)));
     // Render mesh
-
+	renderer::render(m);
     // *********************************
   }
 

@@ -44,15 +44,17 @@ bool load_content() {
   tex = texture("textures/checker.png");
 
   // Load in shaders
-  eff.add_shader("31_Texturing_Shader/simple_texture.vert", GL_VERTEX_SHADER);
-  eff.add_shader("31_Texturing_Shader/simple_texture.frag", GL_FRAGMENT_SHADER);
+  eff.add_shader("27_Texturing_Shader/simple_texture.vert", GL_VERTEX_SHADER);
+  eff.add_shader("27_Texturing_Shader/simple_texture.frag", GL_FRAGMENT_SHADER);
   // Build effect
   eff.build();
 
   // Set camera properties
   cam.set_position(vec3(50.0f, 10.0f, 50.0f));
   cam.set_target(vec3(0.0f, 0.0f, 0.0f));
-  cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+  auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
+
+  cam.set_projection(quarter_pi<float>(), aspect, 0.1f, 1000.0f);
   return true;
 }
 
@@ -69,17 +71,23 @@ bool update(float delta_time) {
   // *********************************
   // Update the camera
 
+  cam.update(delta_time);
+  static bool pressed;
+  if (glfwGetMouseButton(renderer::get_window(), 0) == GLFW_RELEASE)
+	  pressed = false;
   // If mouse button pressed get ray and check for intersection
-
-    // Get the mouse position
-
-
-
-    // Origin and direction of the ray
-
-
-    // Convert mouse position to ray
-
+  if (!pressed && glfwGetMouseButton(renderer::get_window(), 0) == GLFW_PRESS)
+  {
+	  pressed = true;
+	  // Get the mouse position
+	  double cursor_x = 0.0;
+	  double cursor_y = 0.0;
+	  glfwGetCursorPos(renderer::get_window(), &cursor_x, &cursor_y);
+	  // Origin and direction of the ray
+	  vec3 direction;
+	  vec3 origin;
+	  // Convert mouse position to ray
+	  screen_pos_to_world_ray(cursor_x, cursor_y, renderer::get_screen_width(), renderer::get_screen_height(), cam.get_view(), cam.get_projection(), origin, direction);
 
     // *********************************
     // Check all the mehes for intersection

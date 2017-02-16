@@ -49,7 +49,8 @@ bool load_content() {
   // Set camera properties
   cam.set_position(vec3(50.0f, 10.0f, 50.0f));
   cam.set_target(vec3(0.0f, 0.0f, 0.0f));
-  cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+  auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
+  cam.set_projection(quarter_pi<float>(), aspect, 0.1f, 1000.0f);
   return true;
 }
 
@@ -88,9 +89,9 @@ bool render() {
 
     // *********************************
     // Set material colour - all objects red
-
-    // Set ambient intensity - (0.3, 0.3, 0.3, 1.0)
-
+	glUniform4fv(eff.get_uniform_location("material_colour"), 1, value_ptr(vec4(1.0f, 0.0f, 0.0f, 1.0f)));
+	// Set ambient intensity - (0.3, 0.3, 0.3, 1.0)
+	glUniform4fv(eff.get_uniform_location("ambient_intensity"), 1, value_ptr(vec4(0.3f, 0.3f, 0.3f, 1.0f)));
     // *********************************
     // Render mesh
     renderer::render(m);
