@@ -33,7 +33,7 @@ bool load_content() {
 
   // Set the transforms for your meshes here
   // 5x scale, move(-10.0f, 2.5f, -30.0f)
-  meshes["box"].get_transform().scale += vec3(5.0f, 5.0f, 5.0f);
+  meshes["box"].get_transform().scale += vec3(5.0f, 20.0f, 20.0f);
   meshes["box"].get_transform().position += vec3(-10.0f, 2.5f, -30.0f);
   // 4x scale, move(-30.0f, 10.0f, -10.0f)
   meshes["tetra"].get_transform().scale += vec3(4.0f, 4.0f, 4.0f);

@@ -30,7 +30,7 @@ layout(location = 0) out vec4 vertex_colour;
 
 void main() {
   // Calculate position
-
+     gl_Position = MVP * vec4(position, 1.0);
   // Calculate ambient component
 
   // Transform the normal
