@@ -49,7 +49,8 @@ bool load_content() {
   // Set camera properties
   cam.set_position(vec3(50.0f, 10.0f, 50.0f));
   cam.set_target(vec3(0.0f, 0.0f, 0.0f));
-  cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+  auto aspect = static_cast<float>(renderer::get_screen_width()) / static_cast<float>(renderer::get_screen_height());
+  cam.set_projection(quarter_pi<float>(), aspect, 0.1f, 1000.0f);
   return true;
 }
 
@@ -78,7 +79,8 @@ bool update(float delta_time) {
 bool render() {
   // Render meshes
   for (auto &e : meshes) {
-    auto m = e.second;
+	  auto m = e.second;
+	  auto N = m.get_transform().get_normal_matrix();
     // Bind effect
     renderer::bind(eff);
     // Create MVP matrix
@@ -89,23 +91,24 @@ bool render() {
     // Set MVP matrix uniform
     glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
     // *********************************
-    // Set M matrix uniform
-
-    // Set N matrix uniform - remember - 3x3 matrix
-
-    // Set ambient intensity - (0.3, 0.3, 0.3, 1.0)
-
-    // Set light colour - (1.0, 1.0, 1.0, 1.0)
-
-    // Set light direction - (1.0, 1.0, -1.0)
-
-    // Set diffuse reflection - all objects red
-
-    // Set specular reflection - white
-
-    // Set shininess - Use 50.0f
-
-    // Set eye position - Get this from active camera
+	// Set M matrix uniform
+	glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
+	// Set N matrix uniform - remember - 3x3 matrix
+	glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(N));
+	// Set ambient intensity - (0.3, 0.3, 0.3, 1.0)
+	glUniform4fv(eff.get_uniform_location("ambient_intensity"), 1, value_ptr(vec4(0.3, 0.3, 0.3, 1.0)));
+	// Set light colour - (1.0, 1.0, 1.0, 1.0)
+	glUniform4fv(eff.get_uniform_location("light_colour"), 1, value_ptr(vec4(1.0, 1.0, 1.0, 1.0)));
+	// Set light direction - (1.0, 1.0, -1.0)
+	glUniform3fv(eff.get_uniform_location("light_dir"), 1, value_ptr(vec3(1.0, 1.0, -1.0)));
+	// Set diffuse reflection - all objects red
+	glUniform4fv(eff.get_uniform_location("diffuse_reflection"), 1, value_ptr(vec4(1.0, 0.0, 0.0, 0.0)));
+	// Set specular reflection - white
+	glUniform4fv(eff.get_uniform_location("specular_reflection"), 1, value_ptr(vec4(1.0, 1.0, 1.0, 1.0)));
+	// Set shininess - Use 50.0f
+	glUniform1f(eff.get_uniform_location("shininess"), 50.0f);
+	// Set eye position - Get this from active camera
+	glUniform3fv(eff.get_uniform_location("eye_pos"), 1, value_ptr(cam.get_position()));
 
     // *********************************
     // Render mesh
