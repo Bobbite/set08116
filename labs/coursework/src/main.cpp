@@ -5,13 +5,16 @@ using namespace std;
 using namespace graphics_framework;
 using namespace glm;
 
-map<string, mesh> meshes;
+map<string, mesh> boxes;
+map<string, mesh> walls;
+map<string, mesh> barrels;
+
 geometry geom;
 effect eff;
 //target_camera cam;
 free_camera freeCam;
-texture tex;
-
+texture tex, texBox;
+array<texture, 5> texs;
 //cursor pos
 double cursor_x = 0.0;
 double cursor_y = 0.0;
@@ -30,48 +33,54 @@ bool initialise() {
 
 
 bool load_content() {
-	// Create triangle data
 	// Create plane mesh
 	//meshes["plane"] = mesh(geometry_builder::create_plane());
 	// Create scene
-	meshes["box1"] = mesh(geometry_builder::create_box());
-	meshes["box2"] = mesh(geometry_builder::create_box());
-	meshes["box3"] = mesh(geometry_builder::create_box());
+	boxes["box1"] = mesh(geometry_builder::create_box());
+	boxes["box2"] = mesh(geometry_builder::create_box());
+	boxes["box3"] = mesh(geometry_builder::create_box());
 
-	meshes["Floor"] = mesh(geometry_builder::create_box());
-	meshes["wallLeft"] = mesh(geometry_builder::create_box());
-	meshes["wallRight"] = mesh(geometry_builder::create_box());
-	meshes["wallBack"] = mesh(geometry_builder::create_box());
+	mesh floor = mesh(geometry_builder::create_box());
+	walls["wallLeft"] = mesh(geometry_builder::create_box());
+	walls["wallRight"] = mesh(geometry_builder::create_box());
+	walls["wallBack"] = mesh(geometry_builder::create_box());
+
+	barrels["barrel1"] = mesh(geometry_builder::create_cylinder());
 
 	// Transform objects
-	meshes["box1"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
-	meshes["box1"].get_transform().translate(vec3(-10.0f, 3.5f, -30.0f));
+	boxes["box1"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
+	boxes["box1"].get_transform().translate(vec3(-10.0f, 3.5f, -30.0f));
 
-	meshes["box2"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
-	meshes["box2"].get_transform().translate(vec3(-8.8f, 8.5f, -30.0f));
-	meshes["box2"].get_transform().rotate(vec3(0.0f, 1.2f, 0.0f));
+	boxes["box2"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
+	boxes["box2"].get_transform().translate(vec3(-8.8f, 8.5f, -30.0f));
+	boxes["box2"].get_transform().rotate(vec3(0.0f, 1.2f, 0.0f));
+	
+	boxes["box3"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
+	boxes["box3"].get_transform().translate(vec3(-4.1f, 3.5f, -30.0f));
+	boxes["box3"].get_transform().rotate(vec3(0.0f, -1.2f, 0.0f));
 
-	meshes["box3"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
-	meshes["box3"].get_transform().translate(vec3(-4.1f, 3.5f, -30.0f));
-	meshes["box3"].get_transform().rotate(vec3(0.0f, -1.2f, 0.0f));
+	barrels["barrel1"].get_transform().scale = vec3(5.0f, 7.0f, 5.0f);
+
 	//Walls and floor
-	meshes["Floor"].get_transform().scale = vec3(50.0f, 1.0f, 75.0f);
-	meshes["Floor"].get_transform().position = vec3(0.0f, 0.5f, 0.0f);
+	floor.get_transform().scale = vec3(50.0f, 1.0f, 75.0f);
+	floor.get_transform().position = vec3(0.0f, 0.5f, 0.0f);
 
-	meshes["wallLeft"].get_transform().scale = vec3(1.0f, 28.0f, 75.0f);
-	meshes["wallLeft"].get_transform().position = vec3(-25.0f, 14.0f, 0.0f);
+	walls["wallLeft"].get_transform().scale = vec3(1.0f, 28.0f, 75.0f);
+	walls["wallLeft"].get_transform().position = vec3(-25.0f, 14.0f, 0.0f);
 
-	meshes["wallRight"].get_transform().scale = vec3(1.0f, 28.0f, 75.0f);
-	meshes["wallRight"].get_transform().position = vec3(25.0f, 14.0f, 0.0f);
-
-	meshes["wallBack"].get_transform().scale = vec3(50.0f, 28.0f, 1.0f);
-	meshes["wallBack"].get_transform().position = vec3(0.0f, 14.0f, -37.0f);
+	walls["wallRight"].get_transform().scale = vec3(1.0f, 28.0f, 75.0f);
+	walls["wallRight"].get_transform().position = vec3(25.0f, 14.0f, 0.0f);
+	
+	walls["wallBack"].get_transform().scale = vec3(50.0f, 28.0f, 1.0f);
+	walls["wallBack"].get_transform().position = vec3(0.0f, 14.0f, -37.0f);
 
 	// Load texture
-	tex = texture("textures/checker.png");
+	texs[0] = texture("textures/stone.jpg");
+	texs[1] = texture("textures/crate.jpg");
+	texs[2] = texture("textures/barrel2.jpg");
 
 	// Load in shaders
-	eff.add_shader("shaders/simple_texture.vert", GL_VERTEX_SHADER);
+	eff.add_shader("shaders/simple_texture.vert", GL_VERTEX_SHADER); 
 	eff.add_shader("shaders/simple_texture.frag", GL_FRAGMENT_SHADER);
 	// Build effect
 	eff.build();
@@ -141,12 +150,13 @@ bool update(float delta_time) {
 }
 
 bool render() {
-	for (auto &e : meshes) {
-		auto m = e.second;
+	#pragma region boxes render
+	for (auto &e : boxes) {
+		auto b = e.second;
 		// Bind effect
 		renderer::bind(eff);
 		// Create MVP matrix
-		auto M = m.get_transform().get_transform_matrix();
+		auto M = b.get_transform().get_transform_matrix();
 		auto V = freeCam.get_view();
 		auto P = freeCam.get_projection();
 		auto MVP = P * V * M;
@@ -154,15 +164,60 @@ bool render() {
 		glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
 
 		// Bind texture to renderer
-		renderer::bind(tex, 0);
+		renderer::bind(texs[1], 0);
 		// Set the texture value for the shader here
 		glUniform1i(eff.get_uniform_location("tex"), 0);
-
 		// Render mesh
-		renderer::render(m);
+		renderer::render(b);
 	}
-	// Render geometry
-	//renderer::render(geom);
+#pragma endregion
+
+	#pragma region walls render
+	//render the walls and assign them a texture
+	for (auto &e : walls) {
+		auto w = e.second;
+		// Bind effect
+		renderer::bind(eff);
+		// Create MVP matrix
+		auto M = w.get_transform().get_transform_matrix();
+		auto V = freeCam.get_view();
+		auto P = freeCam.get_projection();
+		auto MVP = P * V * M;
+		// Set MVP matrix uniform
+		glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
+
+		// Bind texture to renderer
+		renderer::bind(texs[0], 1);
+		// Set the texture value for the shader here
+		glUniform1i(eff.get_uniform_location("tex"), 1);
+		// Render mesh
+		renderer::render(w);
+	}
+#pragma endregion
+
+	#pragma region barrels render
+	//render the barrels and assing them a texture
+	for (auto &e : barrels) {
+		auto b = e.second;
+		// Bind effect
+		renderer::bind(eff);
+		// Create MVP matrix
+		auto M = b.get_transform().get_transform_matrix();
+		auto V = freeCam.get_view();
+		auto P = freeCam.get_projection();
+		auto MVP = P * V * M;
+		// Set MVP matrix uniform
+		glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
+
+		// Bind texture to renderer
+		renderer::bind(texs[2], 2);
+		// Set the texture value for the shader here
+		glUniform1i(eff.get_uniform_location("tex"), 2);
+		// Render mesh
+		renderer::render(b);
+	}
+#pragma endregion
+
 	return true;
 }
 
