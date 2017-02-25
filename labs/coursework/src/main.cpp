@@ -8,19 +8,26 @@ using namespace glm;
 map<string, mesh> boxes;
 map<string, mesh> walls;
 map<string, mesh> barrels;
+mesh floorMesh;
 
 geometry geom;
 effect eff;
 //target_camera cam;
 free_camera freeCam;
+target_camera cam;
 texture tex, texBox;
 array<texture, 5> texs;
+
+spot_light pointLight1;
+
 //cursor pos
 double cursor_x = 0.0;
 double cursor_y = 0.0;
 
 //variables
 bool isFreeCamOn = false;
+float wallHeight = 35.0f;
+
 
 bool initialise() {
 	// Set input mode - hide the cursor
@@ -40,7 +47,7 @@ bool load_content() {
 	boxes["box2"] = mesh(geometry_builder::create_box());
 	boxes["box3"] = mesh(geometry_builder::create_box());
 
-	mesh floor = mesh(geometry_builder::create_box());
+	floorMesh = mesh(geometry_builder::create_box());
 	walls["wallLeft"] = mesh(geometry_builder::create_box());
 	walls["wallRight"] = mesh(geometry_builder::create_box());
 	walls["wallBack"] = mesh(geometry_builder::create_box());
@@ -48,53 +55,147 @@ bool load_content() {
 	barrels["barrel1"] = mesh(geometry_builder::create_cylinder());
 
 	// Transform objects
-	boxes["box1"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
-	boxes["box1"].get_transform().translate(vec3(-10.0f, 3.5f, -30.0f));
-
-	boxes["box2"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
-	boxes["box2"].get_transform().translate(vec3(-8.8f, 8.5f, -30.0f));
+	boxes["box1"].get_transform().scale = vec3(6.0f, 6.0f, 6.0f);
+	boxes["box1"].get_transform().translate(vec3(-12.0f, 3.5f, -35.0f));
+	//box on top
+	boxes["box2"].get_transform().scale = vec3(6.0f, 6.0f, 6.0f);
+	boxes["box2"].get_transform().translate(vec3(-10.8f, 9.5f, -35.0f));
 	boxes["box2"].get_transform().rotate(vec3(0.0f, 1.2f, 0.0f));
 	
-	boxes["box3"].get_transform().scale = vec3(5.0f, 5.0f, 5.0f);
-	boxes["box3"].get_transform().translate(vec3(-4.1f, 3.5f, -30.0f));
+	boxes["box3"].get_transform().scale = vec3(6.0f, 6.0f, 6.0f);
+	boxes["box3"].get_transform().translate(vec3(-5.5f, 3.5f, -35.0f));
 	boxes["box3"].get_transform().rotate(vec3(0.0f, -1.2f, 0.0f));
 
 	barrels["barrel1"].get_transform().scale = vec3(5.0f, 7.0f, 5.0f);
+	barrels["barrel1"].get_transform().position = vec3(5.0f, 3.5f, 5.0f);
 
 	//Walls and floor
-	floor.get_transform().scale = vec3(50.0f, 1.0f, 75.0f);
-	floor.get_transform().position = vec3(0.0f, 0.5f, 0.0f);
+	floorMesh.get_transform().scale = vec3(75.0f, 1.0f, 100.0f);
+	floorMesh.get_transform().position = vec3(0.0f, 0.5f, 0.0f);
 
-	walls["wallLeft"].get_transform().scale = vec3(1.0f, 28.0f, 75.0f);
-	walls["wallLeft"].get_transform().position = vec3(-25.0f, 14.0f, 0.0f);
+	walls["wallLeft"].get_transform().scale = vec3(1.0f, wallHeight, 100.0f);
+	walls["wallLeft"].get_transform().position = vec3(-37.0f, 18.5f, 0.0f);
 
-	walls["wallRight"].get_transform().scale = vec3(1.0f, 28.0f, 75.0f);
-	walls["wallRight"].get_transform().position = vec3(25.0f, 14.0f, 0.0f);
+	walls["wallRight"].get_transform().scale = vec3(1.0f, wallHeight, 100.0f);
+	walls["wallRight"].get_transform().position = vec3(37.0f, 18.5f, 0.0f);
 	
-	walls["wallBack"].get_transform().scale = vec3(50.0f, 28.0f, 1.0f);
-	walls["wallBack"].get_transform().position = vec3(0.0f, 14.0f, -37.0f);
+	walls["wallBack"].get_transform().scale = vec3(1.0f, wallHeight, 75.0f)/*(75.0f, wallHeight, 1.0f)*/;
+	walls["wallBack"].get_transform().position = vec3(0.0f, 18.5f, -50.0f);
+	walls["wallBack"].get_transform().rotate(vec3(0.0f, half_pi<float>(), 0.0f));
+
+
+	//set materials
+	material mat;
+	mat.set_emissive(vec4(0.0f, 0.0f, 0.0f, 1.0f)); //emissive black
+	mat.set_specular(vec4(1.0f, 1.0f, 1.0f, 1.0f)); //specular white
+	mat.set_shininess(1.0f);
+	mat.set_diffuse(vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	
+	//set material to all the boxes and walls
+	boxes["box1"].set_material(mat);
+	boxes["box2"].set_material(mat);
+	boxes["box3"].set_material(mat);
+	floorMesh.set_material(mat);
+	walls["wallLeft"].set_material(mat);
+	walls["wallRight"].set_material(mat);
+	walls["wallBack"].set_material(mat);
+	barrels["barrel1"].set_material(mat);
+
 
 	// Load texture
-	texs[0] = texture("textures/stone.jpg");
+	texs[0] = texture("textures/bricks.jpg");
 	texs[1] = texture("textures/crate.jpg");
 	texs[2] = texture("textures/barrel2.jpg");
+	texs[3] = texture("textures/stone.jpg");
+
+	// Set lighting values 
+	// Set lighting values, Position 
+	pointLight1.set_position(vec3(0.0f, 38.0f, 25.0f));
+	// Light colour 
+	pointLight1.set_light_colour(vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	// Light direction to forward and down (normalized)
+	// Set range 
+	pointLight1.set_range(28.0f);
+	// Set power 
 
 	// Load in shaders
-	eff.add_shader("shaders/simple_texture.vert", GL_VERTEX_SHADER); 
-	eff.add_shader("shaders/simple_texture.frag", GL_FRAGMENT_SHADER);
+	eff.add_shader("shaders/shaderCW.vert", GL_VERTEX_SHADER); 
+	eff.add_shader("shaders/shaderCW.frag", GL_FRAGMENT_SHADER);
+
 	// Build effect
 	eff.build();
 
 	// Set camera properties
-	freeCam.set_position(vec3(0.0f, 15.0f, 50.0f));
+	//free camera
+	freeCam.set_position(vec3(0.0f, 50.0f, 50.0f));
 	freeCam.set_target(vec3(0.0f, 0.0f, 0.0f));
 	freeCam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
+
+	//target cam
+	cam.set_position(vec3(0.0f, 15.0f, 50.0f));
+	cam.set_target(vec3(0.0f, 0.0f, 0.0f));
+	cam.set_projection(quarter_pi<float>(), renderer::get_screen_aspect(), 0.1f, 1000.0f);
 	return true;
 }
 
 
 bool update(float delta_time) {
 	// Update the camera
+	#pragma region light
+	// Range of the spot light
+	static float range = 20.0f;
+
+	// WSAD to move point light
+	vec3 posLight;
+	float movementSpeed = 0.5;
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_G))
+	{
+		posLight = vec3(0.0f, 0.0f, movementSpeed);
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_B))
+	{
+		posLight = vec3(0.0f, 0.0f, -movementSpeed);
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_V))
+	{
+		posLight = vec3(-movementSpeed, 0.0f, 0.0f);
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_N))
+	{
+		posLight = vec3(movementSpeed, 0.0f, 0.0f);
+	}
+
+	pointLight1.set_position(pointLight1.get_position() + posLight);
+
+	// O and P to change range
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_O))
+	{
+		range += 1.0f;
+	}
+	if (glfwGetKey(renderer::get_window(), GLFW_KEY_P))
+	{
+		range -= 1.0f;
+	}
+	// Cursor keys to rotate camera on X and Y axis
+	if (glfwGetKey(renderer::get_window(), 'I')) {
+		pointLight1.rotate(vec3(0.3f, 0.0f, 0.0f));
+	}
+	if (glfwGetKey(renderer::get_window(), 'K')) {
+		pointLight1.rotate(vec3(-0.3f, 0.0f, 0.0f));
+	}
+	if (glfwGetKey(renderer::get_window(), 'J')) {
+		pointLight1.rotate(vec3(0.0f, 0.3f, 0.0f));
+	}
+	if (glfwGetKey(renderer::get_window(), 'L')) {
+		pointLight1.rotate(vec3(0.0f, -0.3f, 0.0f));
+	}
+
+	// *********************************
+
+	// Set range
+	pointLight1.set_range(range);
+#pragma endregion
+
 
 	#pragma region free camera
 	// The ratio of pixels to rotation
@@ -126,16 +227,16 @@ bool update(float delta_time) {
 	// Use keyboard to move the camera - WSAD
 	vec3 movement;
 	if (glfwGetKey(renderer::get_window(), 'W')) {
-		movement = vec3(0.0f, 0.0f, 25.0f) * delta_time;
+		movement = vec3(0.0f, 0.0f, 45.0f) * delta_time;
 	}
 	if (glfwGetKey(renderer::get_window(), 'S')) {
-		movement = vec3(0.0f, 0.0f, -25.0f) * delta_time;
+		movement = vec3(0.0f, 0.0f, -45.0f) * delta_time;
 	}
 	if (glfwGetKey(renderer::get_window(), 'A')) {
-		movement = vec3(-25.0f, 0.0f, 0.0f) * delta_time;
+		movement = vec3(-45.0f, 0.0f, 0.0f) * delta_time;
 	}
 	if (glfwGetKey(renderer::get_window(), 'D')) {
-		movement = vec3(25.0f, 0.0f, 0.0f) * delta_time;
+		movement = vec3(45.0f, 0.0f, 0.0f) * delta_time;
 	}
 	// Move camera
 	freeCam.move(movement);
@@ -150,72 +251,98 @@ bool update(float delta_time) {
 }
 
 bool render() {
-	#pragma region boxes render
-	for (auto &e : boxes) {
-		auto b = e.second;
-		// Bind effect
-		renderer::bind(eff);
-		// Create MVP matrix
-		auto M = b.get_transform().get_transform_matrix();
-		auto V = freeCam.get_view();
-		auto P = freeCam.get_projection();
-		auto MVP = P * V * M;
-		// Set MVP matrix uniform
-		glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
+	
+	// Bind effect
+	renderer::bind(eff);
+	// Get PV
+	const auto PV = freeCam.get_projection() * freeCam.get_view();
+	// Set the texture value for the shader here
+	//glUniform1i(eff.get_uniform_location("tex"), 0);
+	// Find the lcoation for the MVP uniform
+	const auto loc = eff.get_uniform_location("MVP");
 
+	//render floor
+	glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(PV * floorMesh.get_transform().get_transform_matrix()));
+	// Bind floor texture
+	renderer::bind(texs[3], 0);
+	// Bind material
+	renderer::bind(floorMesh.get_material(), "mat");
+	// Render floor
+	renderer::render(floorMesh);
+	
+
+
+
+	//render Boxes
+	for (auto &e : boxes) 
+	{
+		auto b = e.second;
+		auto M = b.get_transform().get_transform_matrix();
+		auto MVP = PV * M;
+		// Set MVP matrix uniform
+		glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(MVP));
+
+		// Set M matrix uniform
+		glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
+		// Set N matrix uniform 
+		glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(M));
+
+		// Bind material
+		renderer::bind(b.get_material(), "mat");
 		// Bind texture to renderer
 		renderer::bind(texs[1], 0);
-		// Set the texture value for the shader here
+		// Set tex uniform
 		glUniform1i(eff.get_uniform_location("tex"), 0);
+		// Set eye position - Get this from active camera
+		glUniform3fv(eff.get_uniform_location("eye_pos"), 1, value_ptr(cam.get_position()));
+
 		// Render mesh
 		renderer::render(b);
 	}
-#pragma endregion
-
-	#pragma region walls render
-	//render the walls and assign them a texture
-	for (auto &e : walls) {
+	//render walls
+	for (auto &e : walls)
+	{
 		auto w = e.second;
-		// Bind effect
-		renderer::bind(eff);
-		// Create MVP matrix
 		auto M = w.get_transform().get_transform_matrix();
-		auto V = freeCam.get_view();
-		auto P = freeCam.get_projection();
-		auto MVP = P * V * M;
+		auto MVP = PV * M;
 		// Set MVP matrix uniform
-		glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
+		glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(MVP));
+		// Set M matrix uniform
+		glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
+		// Set N matrix uniform - remember - 3x3 matrix
+		glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(M));
+
 
 		// Bind texture to renderer
-		renderer::bind(texs[0], 1);
-		// Set the texture value for the shader here
-		glUniform1i(eff.get_uniform_location("tex"), 1);
-		// Render mesh
+		renderer::bind(texs[0], 0);
+		// Render mesh 
 		renderer::render(w);
 	}
-#pragma endregion
-
-	#pragma region barrels render
-	//render the barrels and assing them a texture
-	for (auto &e : barrels) {
+	//render barrels
+	for (auto &e : barrels)
+	{
 		auto b = e.second;
-		// Bind effect
-		renderer::bind(eff);
-		// Create MVP matrix
 		auto M = b.get_transform().get_transform_matrix();
-		auto V = freeCam.get_view();
-		auto P = freeCam.get_projection();
-		auto MVP = P * V * M;
+		auto MVP = PV * M;
 		// Set MVP matrix uniform
-		glUniformMatrix4fv(eff.get_uniform_location("MVP"), 1, GL_FALSE, value_ptr(MVP));
+		glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(MVP));
+		// Set M matrix uniform
+		glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
+		// Set N matrix uniform - remember - 3x3 matrix
+		glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(M));
+
+
 
 		// Bind texture to renderer
-		renderer::bind(texs[2], 2);
-		// Set the texture value for the shader here
-		glUniform1i(eff.get_uniform_location("tex"), 2);
+		renderer::bind(texs[2], 0);
 		// Render mesh
 		renderer::render(b);
 	}
+
+	// Bind light 
+	renderer::bind(pointLight1, "point");
+
+	
 #pragma endregion
 
 	return true;
