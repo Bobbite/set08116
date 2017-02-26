@@ -5,9 +5,11 @@ using namespace std;
 using namespace graphics_framework;
 using namespace glm;
 
+//arrays/list of objects
 map<string, mesh> boxes;
 map<string, mesh> walls;
 map<string, mesh> barrels;
+//floor mesh (box)
 mesh floorMesh;
 
 geometry geom;
@@ -18,7 +20,8 @@ target_camera cam;
 texture tex, texBox;
 array<texture, 5> texs;
 
-spot_light pointLight1;
+//lights
+vector<spot_light> spots(1);
 
 //cursor pos
 double cursor_x = 0.0;
@@ -52,7 +55,7 @@ bool load_content() {
 	walls["wallRight"] = mesh(geometry_builder::create_box());
 	walls["wallBack"] = mesh(geometry_builder::create_box());
 
-	barrels["barrel1"] = mesh(geometry_builder::create_cylinder());
+	barrels["barrel1"] = mesh(geometry_builder::create_cylinder(20,20));
 
 	// Transform objects
 	boxes["box1"].get_transform().scale = vec3(6.0f, 6.0f, 6.0f);
@@ -79,7 +82,7 @@ bool load_content() {
 	walls["wallRight"].get_transform().scale = vec3(1.0f, wallHeight, 100.0f);
 	walls["wallRight"].get_transform().position = vec3(37.0f, 18.5f, 0.0f);
 	
-	walls["wallBack"].get_transform().scale = vec3(1.0f, wallHeight, 75.0f)/*(75.0f, wallHeight, 1.0f)*/;
+	walls["wallBack"].get_transform().scale = vec3(1.0f, wallHeight, 75.0f);
 	walls["wallBack"].get_transform().position = vec3(0.0f, 18.5f, -50.0f);
 	walls["wallBack"].get_transform().rotate(vec3(0.0f, half_pi<float>(), 0.0f));
 
@@ -88,7 +91,7 @@ bool load_content() {
 	material mat;
 	mat.set_emissive(vec4(0.0f, 0.0f, 0.0f, 1.0f)); //emissive black
 	mat.set_specular(vec4(1.0f, 1.0f, 1.0f, 1.0f)); //specular white
-	mat.set_shininess(1.0f);
+	mat.set_shininess(0.5f);
 	mat.set_diffuse(vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	
 	//set material to all the boxes and walls
@@ -109,14 +112,16 @@ bool load_content() {
 	texs[3] = texture("textures/stone.jpg");
 
 	// Set lighting values 
-	// Set lighting values, Position 
-	pointLight1.set_position(vec3(0.0f, 38.0f, 25.0f));
+	// Set lighting value s, Position 
+	spots[0].set_position(vec3(0.0f, 50.0f, 50.0f));
 	// Light colour 
-	pointLight1.set_light_colour(vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	spots[0].set_light_colour(vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	// Light direction to forward and down (normalized)
+	spots[0].set_direction(normalize(vec3(1.0f, -1.0f, -1.0f)));
 	// Set range 
-	pointLight1.set_range(28.0f);
+	spots[0].set_range(28.0f);
 	// Set power 
+	spots[0].set_power(0.1f);
 
 	// Load in shaders
 	eff.add_shader("shaders/shaderCW.vert", GL_VERTEX_SHADER); 
@@ -165,7 +170,7 @@ bool update(float delta_time) {
 		posLight = vec3(movementSpeed, 0.0f, 0.0f);
 	}
 
-	pointLight1.set_position(pointLight1.get_position() + posLight);
+	spots[0].set_position(spots[0].get_position() + posLight);
 
 	// O and P to change range
 	if (glfwGetKey(renderer::get_window(), GLFW_KEY_O))
@@ -178,22 +183,22 @@ bool update(float delta_time) {
 	}
 	// Cursor keys to rotate camera on X and Y axis
 	if (glfwGetKey(renderer::get_window(), 'I')) {
-		pointLight1.rotate(vec3(0.3f, 0.0f, 0.0f));
+		spots[0].rotate(vec3(0.3f, 0.0f, 0.0f));
 	}
 	if (glfwGetKey(renderer::get_window(), 'K')) {
-		pointLight1.rotate(vec3(-0.3f, 0.0f, 0.0f));
+		spots[0].rotate(vec3(-0.3f, 0.0f, 0.0f));
 	}
 	if (glfwGetKey(renderer::get_window(), 'J')) {
-		pointLight1.rotate(vec3(0.0f, 0.3f, 0.0f));
+		spots[0].rotate(vec3(0.0f, 0.3f, 0.0f));
 	}
 	if (glfwGetKey(renderer::get_window(), 'L')) {
-		pointLight1.rotate(vec3(0.0f, -0.3f, 0.0f));
+		spots[0].rotate(vec3(0.0f, -0.3f, 0.0f));
 	}
 
 	// *********************************
 
 	// Set range
-	pointLight1.set_range(range);
+	spots[0].set_range(range);
 #pragma endregion
 
 
@@ -261,33 +266,43 @@ bool render() {
 	// Find the lcoation for the MVP uniform
 	const auto loc = eff.get_uniform_location("MVP");
 
+	auto MVP = PV * floorMesh.get_transform().get_transform_matrix();
+
 	//render floor
+	//set M matrix uniform
 	glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(PV * floorMesh.get_transform().get_transform_matrix()));
+	// Set MVP matrix uniform
+	glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(MVP));
 	// Bind floor texture
 	renderer::bind(texs[3], 0);
 	// Bind material
 	renderer::bind(floorMesh.get_material(), "mat");
+	// Set N matrix uniform 
+	glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(floorMesh.get_transform().get_transform_matrix()));
+	// Set tex uniform
+	glUniform1i(eff.get_uniform_location("tex"), 0);
+	// Set eye position - Get this from active camera
+	glUniform3fv(eff.get_uniform_location("eye_pos"), 1, value_ptr(cam.get_position()));
+
 	// Render floor
 	renderer::render(floorMesh);
-	
-
-
 
 	//render Boxes
-	for (auto &e : boxes) 
+	for (auto &e : boxes)  
 	{
+
 		auto b = e.second;
 		auto M = b.get_transform().get_transform_matrix();
 		auto MVP = PV * M;
 		// Set MVP matrix uniform
 		glUniformMatrix4fv(loc, 1, GL_FALSE, value_ptr(MVP));
-
 		// Set M matrix uniform
 		glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
 		// Set N matrix uniform 
 		glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(M));
 
-		// Bind material
+ 
+		// Bind material 
 		renderer::bind(b.get_material(), "mat");
 		// Bind texture to renderer
 		renderer::bind(texs[1], 0);
@@ -311,10 +326,13 @@ bool render() {
 		glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
 		// Set N matrix uniform - remember - 3x3 matrix
 		glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(M));
+		// Set tex uniform
+		glUniform1i(eff.get_uniform_location("tex"), 0);
+		// Set eye position - Get this from active camera
+		glUniform3fv(eff.get_uniform_location("eye_pos"), 1, value_ptr(cam.get_position()));
 
-
-		// Bind texture to renderer
-		renderer::bind(texs[0], 0);
+		// Bind texture to renderer 
+		renderer::bind(texs[0], 0); 
 		// Render mesh 
 		renderer::render(w);
 	}
@@ -330,9 +348,12 @@ bool render() {
 		glUniformMatrix4fv(eff.get_uniform_location("M"), 1, GL_FALSE, value_ptr(M));
 		// Set N matrix uniform - remember - 3x3 matrix
 		glUniformMatrix3fv(eff.get_uniform_location("N"), 1, GL_FALSE, value_ptr(M));
+		// Set tex uniform
+		glUniform1i(eff.get_uniform_location("tex"), 0);  
+		// Set eye position - Get this from active camera
+		glUniform3fv(eff.get_uniform_location("eye_pos"), 1, value_ptr(cam.get_position()));
 
-
-
+		 
 		// Bind texture to renderer
 		renderer::bind(texs[2], 0);
 		// Render mesh
@@ -340,7 +361,7 @@ bool render() {
 	}
 
 	// Bind light 
-	renderer::bind(pointLight1, "point");
+	renderer::bind(spots, "spots"); 
 
 	
 #pragma endregion
